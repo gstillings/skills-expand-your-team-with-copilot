@@ -519,6 +519,46 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    // Create social share buttons
+    const activityUrl = new URL(window.location.href);
+    activityUrl.searchParams.set("activity", name);
+    const activityLink = activityUrl.toString();
+    const shareText = encodeURIComponent(`Check out ${name} at Mergington High School! ${details.description}`);
+    const shareUrl = encodeURIComponent(activityLink);
+
+    function makeShareButton(href, cssClass, icon, label, ariaLabel, isAnchor = true) {
+      if (isAnchor) {
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer"
+                   class="share-button ${cssClass}" aria-label="${ariaLabel}">
+                  ${icon} ${label}
+                </a>`;
+      }
+      return `<button class="share-button ${cssClass}" aria-label="${ariaLabel}" data-activity="${name}">
+                ${icon} ${label}
+              </button>`;
+    }
+
+    const shareSection = `
+      <div class="share-section">
+        <div class="share-label">Share this activity:</div>
+        <div class="share-buttons">
+          ${makeShareButton(
+            `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`,
+            "share-button-twitter", "𝕏", "Twitter", `Share ${name} on Twitter`
+          )}
+          ${makeShareButton(
+            `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`,
+            "share-button-facebook", "📘", "Facebook", `Share ${name} on Facebook`
+          )}
+          ${makeShareButton(
+            `mailto:?subject=${encodeURIComponent(`Join ${name} at Mergington High!`)}&body=${shareText}%0A%0A${shareUrl}`,
+            "share-button-email", "✉", "Email", `Share ${name} via Email`
+          )}
+          ${makeShareButton("", "share-button-copy", "🔗", "Copy Link", `Copy link to ${name}`, false)}
+        </div>
+      </div>
+    `;
+
     activityCard.innerHTML = `
       ${tagHtml}
       <h4>${name}</h4>
@@ -569,6 +609,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      ${shareSection}
     `;
 
     // Add click handlers for delete buttons
@@ -586,6 +627,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handler for copy link button
+    const copyButton = activityCard.querySelector(".share-button-copy");
+    copyButton.addEventListener("click", () => {
+      navigator.clipboard.writeText(activityLink).then(() => {
+        copyButton.textContent = "✔ Copied!";
+        copyButton.classList.add("copied");
+        setTimeout(() => {
+          copyButton.textContent = "🔗 Copy Link";
+          copyButton.classList.remove("copied");
+        }, 2000);
+      }).catch(() => {
+        copyButton.textContent = "⚠ Copy failed";
+        setTimeout(() => {
+          copyButton.textContent = "🔗 Copy Link";
+        }, 2000);
+      });
+    });
 
     activitiesList.appendChild(activityCard);
   }
